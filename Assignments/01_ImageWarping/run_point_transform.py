@@ -49,7 +49,53 @@ def point_guided_deformation(image, source_pts, target_pts, alpha=1.0, eps=1e-8)
     """
     
     warped_image = np.array(image)
+    warped_image.fill(255)  # 白色背景
     ### FILL: 基于MLS or RBF 实现 image warping
+    
+    h, w = image.shape[:2]
+    src=np.array(source_pts)
+    tgt=np.array(target_pts)
+    n=src.shape[0]
+    A=np.ones((n,n))
+    y=np.zeros((n,2))
+    for i in range(n):
+        A[:,i]=1/(np.sum((tgt-tgt[i])**2,axis=1)+1e3)
+
+    y=src-tgt
+    coef=np.linalg.solve(A,y)
+
+    # for i in range(h):
+    #     for j in range(w):
+    #         x,y=j,i
+    #         b=1/(np.sum((tgt-np.array([x,y]))**2,axis=1)+1e3)
+    #         newxy=b@coef+np.array([x,y])
+    #         newx,newy=newxy[1],newxy[0]
+    #         newx=int(np.clip(newx,0,h-1))
+    #         newy=int(np.clip(newy,0,w-1))
+
+    #         warped_image[y,x]=image[newx,newy]
+
+    grid_x, grid_y = np.meshgrid(np.arange(w), np.arange(h))
+    
+    # 将网格坐标展平
+    flat_grid_x = grid_x.flatten()
+    flat_grid_y = grid_y.flatten()
+    
+    # 计算每个像素的新位置
+    flat_coords = np.vstack((flat_grid_x, flat_grid_y)).T
+    b = 1 / (np.sum((tgt - flat_coords[:, np.newaxis])**2, axis=2) + 1e3)
+    new_coords = b @ coef + flat_coords
+    
+    # 提取新位置的x和y坐标
+    new_x = new_coords[:, 1].reshape(h, w)
+    new_y = new_coords[:, 0].reshape(h, w)
+    
+    # 边界处理
+    new_x = np.clip(new_x, 0, h - 1).astype(np.int32)
+    new_y = np.clip(new_y, 0, w - 1).astype(np.int32)
+    
+    # 创建变形后的图像
+    warped_image[grid_y, grid_x] = image[new_x, new_y]
 
     return warped_image
 
