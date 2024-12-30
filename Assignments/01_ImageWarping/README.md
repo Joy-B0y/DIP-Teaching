@@ -51,7 +51,7 @@ python run_point_transform.py
 <img src="pics/1-1.gif" alt="alt text" width="800">
 
 ### Point Guided Deformation:
-<img src="pics/1-2.png" alt="alt text" width="800">
+<img src="pics/1-2.PNG" alt="alt text" width="800">
 
 ## Acknowledgement
 
