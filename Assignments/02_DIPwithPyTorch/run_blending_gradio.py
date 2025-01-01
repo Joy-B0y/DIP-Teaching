@@ -3,6 +3,7 @@ from PIL import ImageDraw
 import numpy as np
 import torch
 
+#95 115
 # Initialize the polygon state
 def initialize_polygon():
     """
@@ -101,15 +102,60 @@ def create_mask_from_points(points, img_h, img_w):
         points (np.ndarray): Polygon points of shape (n, 2).
         img_h (int): Image height.
         img_w (int): Image width.
-
-    Returns:
-        np.ndarray: Binary mask of shape (img_h, img_w).
     """
+
     mask = np.zeros((img_h, img_w), dtype=np.uint8)
     ### FILL: Obtain Mask from Polygon Points. 
     ### 0 indicates outside the Polygon.
     ### 255 indicates inside the Polygon.
 
+    print(points)
+    x = points[:, 0]
+    head_x = x
+    tail_x = np.roll(x, -1)
+    y = points[:, 1]
+    head_y = y
+    tail_y = np.roll(y, -1)
+    tt_y = np.roll(tail_y, -1)
+    ind = (((tail_y - y) * (tail_y - tt_y)) < 0)
+    tail_y[ind] = tail_y[ind] - 0.5
+    # print(tail)
+    # x_range = np.arange(img_w)
+    Y = np.ones((img_h, img_w))
+    Y_mul = np.arange(img_h).reshape(img_h, -1)
+    Y *= Y_mul
+
+    X = np.ones((img_h, img_w))
+    X_mul = np.arange(img_w).reshape(-1, img_w)
+    X *= X_mul
+    X = X[..., None]
+    Y = Y[..., None]
+    # print(X[..., 0], Y[..., 0])
+    head_x = head_x[None, None]
+    tail_x = tail_x[None, None]
+    head_y = head_y[None, None]
+    tail_y = tail_y[None, None]
+
+    spec = head_y - tail_y
+    spec = (spec == 0)
+    solution = (Y - tail_y) * (head_x - tail_x) / (head_y - tail_y) + tail_x
+    # solution[head_y[spec]] = head_x[spec]
+
+    m2 = (X - solution) > 0
+    
+    sign = (solution - head_x) * (solution - tail_x)
+    sign[m2] = 1
+    m = sign <= 0
+    m = m.sum(axis=-1)
+    spec = (m[y, :] == 2)
+    # print(m[y])
+    m[y, :][spec] = 1
+    mask = (m == 1) * 255
+    import cv2
+    cv2.imwrite('mask.png', mask)
+
+    # print(X, Y)
+    # print(mask[y, x])
     return mask
 
 # Calculate the Laplacian loss between the foreground and blended image
@@ -127,6 +173,13 @@ def cal_laplacian_loss(foreground_img, foreground_mask, blended_img, background_
         torch.Tensor: The computed Laplacian loss.
     """
     loss = torch.tensor(0.0, device=foreground_img.device)
+    # (1, 1, 3, 3)
+    filter = torch.tensor([[0, 1, 0], [1, -4, 1], [0, 1, 0]], device=foreground_img.device).float().unsqueeze(0).unsqueeze(0)
+    filter = filter.expand(3, 1, -1, -1)
+    fore_out = torch.nn.functional.conv2d(foreground_img, filter, padding=1, groups=3)
+    back_out = torch.nn.functional.conv2d(blended_img, filter, padding=1, groups=3)
+    loss = torch.nn.functional.mse_loss(fore_out[foreground_mask.bool(
+    ).expand(-1, 3, -1, -1)], back_out[background_mask.bool().expand(-1, 3, -1, -1)])
     ### FILL: Compute Laplacian Loss with https://pytorch.org/docs/stable/generated/torch.nn.functional.conv2d.html.
     ### Note: The loss is computed within the masks.
 
