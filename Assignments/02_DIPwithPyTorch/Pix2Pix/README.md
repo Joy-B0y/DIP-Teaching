@@ -1,9 +1,10 @@
 ### Implement [Pix2Pix](https://phillipi.github.io/pix2pix/) with [Fully Convolutional Layers](https://arxiv.org/abs/1411.4038)
 
-Fill the [Fully Convolutional Network](FCN_network.py#L3) part of `FCN_network.py`, then run:
+Yunkai Zhao's inplement, then run:
 
-```bash
-bash download_facades_dataset.sh
+```
+windows
+python download_facades_dataset.py
 python train.py
 ```
 

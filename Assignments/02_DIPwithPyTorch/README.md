@@ -16,8 +16,10 @@
 
 
 ### 2. Pix2Pix implementation.
-See [Pix2Pix subfolder](Pix2Pix/).
-
+training result:
+<img src="Pix2Pix\train_results\epoch_790\result_5.png" alt="alt text" width="800">.
+validation result:
+<img src="Pix2Pix\val_results\epoch_790\result_5.png" alt="alt text" width="800">
 ---
 ### Requirements:
 - 请自行环境配置，推荐使用[conda环境](https://docs.anaconda.com/miniconda/)

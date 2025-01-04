@@ -1,12 +1,17 @@
-# Assignment 3 - Play with GANs
 
-### In this assignment, you will implement two methods for using GANs in digital image processing.
+### Implement [Pix2Pix](https://phillipi.github.io/pix2pix/) with [Fully Convolutional Layers](https://arxiv.org/abs/1411.4038)
 
-### Resources:
-- [DragGAN](https://vcai.mpi-inf.mpg.de/projects/DragGAN/): [Implementaion 1](https://github.com/XingangPan/DragGAN) & [Implementaion 2](https://github.com/OpenGVLab/DragGAN)
-- [Facial Landmarks Detection](https://github.com/1adrianb/face-alignment)
+Yunkai Zhao's inplement, then run:
 
----
+```
+windows
+python download_facades_dataset.py
+python train.py
+```
+training result:
+<img src="train_results\epoch_200\batch_0_sample_1.png" alt="alt text" width="800">.
+validation result:
+<img src="val_results\epoch_200\batch_9_sample_1.png" alt="alt text" width="800">
 
-\
-See [作业03-Play_with_GANs.pptx](https://rec.ustc.edu.cn/share/705bfa50-6e53-11ef-b955-bb76c0fede49) for detailed requirements.
+### 2.
+

@@ -46,12 +46,13 @@ class GaussianRenderer(nn.Module):
         # 4. Transform covariance to camera space and then to 2D
         # Compute Jacobian of perspective projection
         J_proj = torch.zeros((N, 2, 3), device=means3D.device)
-        ### FILL:
-        ### J_proj = ...
+        J_proj[:, 0, 0] = K[0, 0] / (cam_points[:, 2] + 1e-8)
+        J_proj[:, 0, 2] = -K[0, 0] * cam_points[:, 0] / (cam_points[:, 2] ** 2 + 1e-8)
+        J_proj[:, 1, 1] = K[1, 1] / (cam_points[:, 2] + 1e-8)
+        J_proj[:, 1, 2] = -K[1, 1] * cam_points[:, 1] / (cam_points[:, 2] ** 2 + 1e-8)
         
         # Transform covariance to camera space
-        ### FILL: Aplly world to camera rotation to the 3d covariance matrix
-        ### covs_cam = ...  # (N, 3, 3)
+        covs_cam = torch.matmul(R, torch.matmul(covs3d, R.T))  # (N, 3, 3)
         
         # Project to 2D
         covs2D = torch.bmm(J_proj, torch.bmm(covs_cam, J_proj.permute(0, 2, 1)))  # (N, 2, 2)
@@ -75,9 +76,15 @@ class GaussianRenderer(nn.Module):
         covs2D = covs2D + eps * torch.eye(2, device=covs2D.device).unsqueeze(0)
         
         # Compute determinant for normalization
+        covs2D_det = torch.linalg.det(covs2D).clamp(min=EPS)  # (N,)
+
         ### FILL: compute the gaussian values
-        ### gaussian = ... ## (N, H, W)
-    
+        covs2D_inv = torch.linalg.inv(covs2D)  # (N, 2, 2)
+        dx_expanded = dx.unsqueeze(-1)  # (N, H, W, 2, 1)
+        P = -0.5 * torch.matmul(dx_expanded.transpose(-2, -1), torch.matmul(covs2D_inv[:, None, None], dx_expanded)).squeeze(-1).squeeze(-1)  # (N, H, W)
+        normalization = (2 * torch.pi * covs2D_det).sqrt()  # (N,)
+        gaussian = torch.exp(P) / (normalization[:, None, None] + EPS)  # (N, H, W)
+
         return gaussian
 
     def forward(
@@ -120,6 +127,7 @@ class GaussianRenderer(nn.Module):
         # 7. Compute weights
         ### FILL:
         ### weights = ... # (N, H, W)
+        weights = (1 - alphas).cumprod(0) * alphas / (1 + EPS - alphas) # (N, H, W)
         
         # 8. Final rendering
         rendered = (weights.unsqueeze(-1) * colors).sum(dim=0)  # (H, W, 3)

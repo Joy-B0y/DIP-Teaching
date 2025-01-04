@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import pytorch3d
 from pytorch3d.ops.knn import knn_points
 from typing import Dict, Tuple
 from dataclasses import dataclass
@@ -111,7 +112,8 @@ class GaussianModel(nn.Module):
         
         # Compute covariance
         ### FILL:
-        ### Covs3d = ...
+        RS = R.bmm(S)
+        Covs3d = RS.bmm(RS.transpose(1, 2))
         
         return Covs3d
 

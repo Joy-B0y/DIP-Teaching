@@ -145,8 +145,8 @@ def main():
     train_dataset = FacadesDataset(list_file='train_list.txt')
     val_dataset = FacadesDataset(list_file='val_list.txt')
 
-    train_loader = DataLoader(train_dataset, batch_size=100, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=100, shuffle=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=100, shuffle=False, num_workers=0)
 
     # Initialize model, loss function, and optimizer
     model = FullyConvNetwork().to(device)
@@ -156,8 +156,16 @@ def main():
     # Add a learning rate scheduler for decay
     scheduler = StepLR(optimizer, step_size=200, gamma=0.2)
 
+    # Load pretrained weights if available
+    pretrained_path = 'checkpoints/pix2pix_0.pth'
+    if os.path.exists(pretrained_path):
+        print(f"Loading pretrained weights from {pretrained_path}...")
+        model.load_state_dict(torch.load(pretrained_path, map_location=device))
+    else:
+        print(f"No pretrained weights found at {pretrained_path}. Starting training from scratch.")
+
     # Training loop
-    num_epochs = 800
+    num_epochs = 600
     for epoch in range(num_epochs):
         train_one_epoch(model, train_loader, optimizer, criterion, device, epoch, num_epochs)
         validate(model, val_loader, criterion, device, epoch, num_epochs)
