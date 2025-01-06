@@ -17,3 +17,7 @@ python debug_mvs_by_projecting_pts.py --data_dir data/chair
 ```
 python train.py --colmap_dir data/chair --checkpoint_dir data/chair/checkpoints
 ```
+
+training result:
+
+<img src="data\chair\checkpoints\debug_images\epoch_0199\r_78.png" alt="alt text" width="400">.
